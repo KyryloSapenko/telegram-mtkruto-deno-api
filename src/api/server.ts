@@ -5,6 +5,7 @@ import {
   listingForMessages,
   registerUserFirstStep,
   registerUserSecondStep,
+  clearTriggersForUser,
 } from "DenoTelegram/telegram/client.ts";
 
 const app = new Hono();
@@ -34,17 +35,24 @@ app.post("/send-to-user", async (c) => {
 });
 
 app.post("/trigger-message", async (c) => {
+  const body = await c.req.json().catch(() => null);
+  if (!body || typeof body.username !== "string" || typeof body.trigger !== "string" || typeof body.reply !== "string") {
+    return c.json({ error: "Fields `username`, `trigger`, and `reply` are required" }, 400);
+  }
+
+  await listingForMessages(body.username, body.trigger, body.reply);
+  return c.json({ ok: true });
+});
+
+app.delete("/trigger-message", async (c) => {
     const body = await c.req.json().catch(() => null);
-    if (!body || typeof body.to !== "string" || typeof body.trigger !== "string" || typeof body.reply !== "string") {
-        return c.json({ error: "Fields `to`, `trigger`, and `reply` are required" }, 400);
+    if (!body || typeof body.username !== "string") {
+        return c.json({ error: "Field `username` is required" }, 400);
     }
-    const triggerfunction = async (from: string) => {
-        console.log(`Trigger function called for message from @${from}`);
-        await sendMessageToUser(body.to, from, body.reply);
-    };
-    await listingForMessages(body.to, body.trigger, triggerfunction);
+    await clearTriggersForUser(body.username);
     return c.json({ ok: true });
 });
+    
 
 app.post("/register", async (c) => {
     const body = await c.req.json().catch(() => null);
