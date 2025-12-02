@@ -1,0 +1,15 @@
+{
+  "tasks": {
+    "dev:telegram": "deno run -A --env-file=.env --watch src/telegram/client.ts",
+
+    "dev:api": "deno serve --allow-net --allow-env --allow-read --allow-import --allow-write --watch src/api/server.ts"
+  },
+  "imports": {
+    "DenoTelegram/": "./src/",
+    "@std/path": "jsr:@std/path@^1.1.3",
+    "mtkruto": "https://deno.land/x/mtkruto@0.76.1/mod.ts",
+    "@std/dotenv": "jsr:@std/dotenv@^0.225",
+    "@std/http": "jsr:@std/http@1",
+    "@hono/hono": "jsr:@hono/hono@4.10.7"
+    }
+}
