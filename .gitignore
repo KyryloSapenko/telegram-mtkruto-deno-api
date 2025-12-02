@@ -1,3 +1,5 @@
 .vscode
 
 .env
+
+sessions.json
