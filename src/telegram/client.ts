@@ -11,6 +11,7 @@ const sessionsPath = join(currentDir, "..", "..", "sessions.json");
 
 let isConnected = false;
 let currentUsername: string | null = null;
+let isMessageListenerAttached = false;
 
 type Deferred<T> = {
   promise: Promise<T>;
@@ -36,6 +37,13 @@ type PendingRegistration = {
 };
 
 let pendingRegistration: PendingRegistration | null = null;
+
+type TriggerSubscription = {
+  message: string;
+  handler: (from: string) => Promise<void>;
+};
+
+const triggerSubscriptions: TriggerSubscription[] = [];
 
 export const client = new Client({
   apiId: Number(Deno.env.get("TG_API_ID")),
@@ -164,23 +172,21 @@ export async function sendToMe(from: string, text: string) {
   await client.sendMessage("me", text);
 }
 
-export async function listingForMessages(to: string, message: string, triggerfunction: (from: string) => Promise<void>) {
+export async function listingForMessages(
+  to: string,
+  message: string,
+  triggerfunction: (from: string) => Promise<void>,
+) {
   await login(to);
-  console.log("✅ Listening for messages...");
-  client.on("message", async (ctx) => {
-  const meId = await client.getMe().then((me) => me.id);  
-  if (ctx.from.id === meId) return
-    
-  const from = ctx.from?.username || ctx.from?.firstName || "Unknown";
-  const text = ctx.message.text || "[no text]";
-  
-  console.log(`📨 Message from @${from}: ${text}`);
 
-  if (text === message) {    
-    await triggerfunction(from);
+  triggerSubscriptions.push({ message, handler: triggerfunction });
+  console.log(`✅ Registered trigger "${message}" (total: ${triggerSubscriptions.length})`);
+
+  if (!isMessageListenerAttached) {
+    client.on("message", handleIncomingMessage);
+    isMessageListenerAttached = true;
+    console.log("📡 Attached global message listener");
   }
-});
-
 }
 
 async function loginManually() {
@@ -200,4 +206,22 @@ async function loginManually() {
   const newAuth = await client.exportAuthString();
   await persistSession(me.username || "unknown_user", newAuth);
   console.log("Auth string saved to sessions.json");
+}
+
+async function handleIncomingMessage(ctx: any) {
+  const meId = await client.getMe().then((me) => me.id);
+  if (ctx.from.id === meId) {
+    return;
+  }
+
+  const from = ctx.from?.username || ctx.from?.firstName || "Unknown";
+  const text = ctx.message.text || "";
+
+  console.log(`📨 Message from @${from}: ${text || "[no text]"}`);
+
+  for (const subscription of triggerSubscriptions) {
+    if (text === subscription.message) {
+      await subscription.handler(from);
+    }
+  }
 }
