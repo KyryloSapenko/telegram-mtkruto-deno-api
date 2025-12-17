@@ -1,4 +1,4 @@
-import { Hono } from "@hono/hono";
+import { Context, Hono } from "@hono/hono";
 import {
   sendToMe,
   sendMessageToUser,
@@ -10,12 +10,11 @@ import {
 
 const app = new Hono();
 
-app.get("/health", (c) => {
+app.get("/health", (c: Context) => {
   return c.json({ ok: true });
 });
 
-app.post("/send-to-me", async (c) => {
-
+app.post("/send-to-me", async (c: Context) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body.text !== "string" || typeof body.from !== "string") {
     return c.json({ error: "Fields `text` and `from` are required" }, 400);
@@ -25,7 +24,7 @@ app.post("/send-to-me", async (c) => {
   return c.json({ ok: true });
 });
 
-app.post("/send-to-user", async (c) => {
+app.post("/send-to-user", async (c: Context) => {
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.from !== "string" || typeof body.text !== "string" || typeof body.to !== "string") {
         return c.json({ error: "Fields `from`, `to`, and `text` are required" }, 400);
@@ -34,7 +33,7 @@ app.post("/send-to-user", async (c) => {
     return c.json({ ok: true });
 });
 
-app.post("/trigger-message", async (c) => {
+app.post("/trigger-message", async (c: Context) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body.username !== "string" || typeof body.trigger !== "string" || typeof body.reply !== "string") {
     return c.json({ error: "Fields `username`, `trigger`, and `reply` are required" }, 400);
@@ -44,7 +43,7 @@ app.post("/trigger-message", async (c) => {
   return c.json({ ok: true });
 });
 
-app.delete("/trigger-message", async (c) => {
+app.delete("/trigger-message", async (c: Context) => {
     const body = await c.req.json().catch(() => null);
     if (!body || typeof body.username !== "string") {
         return c.json({ error: "Field `username` is required" }, 400);
@@ -54,7 +53,7 @@ app.delete("/trigger-message", async (c) => {
 });
     
 
-app.post("/register", async (c) => {
+app.post("/register", async (c: Context) => {
     const body = await c.req.json().catch(() => null);
   if (!body || typeof body.phone !== "string") {
     return c.json({ error: "Field `phone` is required" }, 400);
@@ -64,7 +63,7 @@ app.post("/register", async (c) => {
   return c.json({ ok: true, ...result });
 });
 
-app.post("/register/confirm", async (c) => {
+app.post("/register/confirm", async (c: Context) => {
   const body = await c.req.json().catch(() => null);
   if (!body || typeof body.phone !== "string" || typeof body.code !== "string") {
     return c.json({ error: "Fields `phone` and `code` are required" }, 400);
@@ -74,7 +73,7 @@ app.post("/register/confirm", async (c) => {
   return c.json({ ok: true, ...result });
 });
 
-app.notFound((c) => {
+app.notFound((c: Context) => {
   return c.text("Not found", 404);
 });
 

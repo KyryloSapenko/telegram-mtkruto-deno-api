@@ -1,8 +1,7 @@
 {
   "tasks": {
-    "dev:telegram": "deno run -A --env-file=.env --watch src/telegram/client.ts",
-
-    "dev:api": "deno serve --allow-net --allow-env --allow-read --allow-import --allow-write --watch src/api/server.ts"
+    "telegram": "deno run -A --env-file=.env --watch src/telegram/client.ts",
+    "api": "deno serve --allow-net --allow-env --allow-read --allow-import --allow-write --watch src/api/server.ts"
   },
   "imports": {
     "DenoTelegram/": "./src/",
